@@ -1,0 +1,50 @@
+{
+  "actions": [],
+  "autoname": "format:{parent_doctype}-{#}",
+  "creation": "2026-06-15 10:00:00.000000",
+  "doctype": "DocType",
+  "document_type": "Child Table",
+  "engine": "InnoDB",
+  "field_order": [
+    "item_name",
+    "item_label",
+    "column_break_3",
+    "rating"
+  ],
+  "fields": [
+    {
+      "fieldname": "item_name",
+      "fieldtype": "Select",
+      "label": "Item de Avaliação",
+      "options": "Treinamento\nInstrutor\nConteúdo\nSatisfação Geral",
+      "reqd": 1,
+      "description": "Selecione o aspecto a ser avaliado"
+    },
+    {
+      "fieldname": "item_label",
+      "fieldtype": "Data",
+      "label": "Descrição",
+      "read_only": 1,
+      "description": "Descrição automática do item"
+    },
+    {
+      "fieldname": "column_break_3",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "rating",
+      "fieldtype": "Select",
+      "label": "Nota (1-5)",
+      "options": "1 - Péssimo\n2 - Ruim\n3 - Regular\n4 - Bom\n5 - Ótimo",
+      "reqd": 1,
+      "description": "Selecione seu nível de satisfação"
+    }
+  ],
+  "idx": 1,
+  "istable": 1,
+  "modified": "2026-06-15 10:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Lms Course Survey",
+  "name": "Satisfaction Item",
+  "owner": "Administrator"
+}

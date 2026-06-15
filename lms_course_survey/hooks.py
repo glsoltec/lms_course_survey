@@ -10,23 +10,32 @@ app_license = "mit"
 
 # required_apps = []
 
-# Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "lms_course_survey",
-# 		"logo": "/assets/lms_course_survey/logo.png",
-# 		"title": "Lms Course Survey",
-# 		"route": "/lms_course_survey",
-# 		"has_permission": "lms_course_survey.api.permission.has_app_permission"
-# 	}
+# Fixtures - Dados iniciais a serem sincronizados
+# fixtures = [
+#    "satisfacao/doctype/course_satisfaction/course_satisfaction.json",
+#    "satisfacao/doctype/satisfaction_item/satisfaction_item.json",
 # ]
+
+# Each item in the list will be shown as an app in the apps page
+add_to_apps_screen = [
+	{
+		"name": "lms_course_survey",
+		"logo": "/assets/lms_course_survey/logo.png",
+		"title": "Pesquisa de Satisfação",
+		"route": "/app/course-satisfaction",
+		"has_permission": "lms_course_survey.api.permission.has_app_permission"
+	}
+]
 
 # Includes in <head>
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/lms_course_survey/css/lms_course_survey.css"
-# app_include_js = "/assets/lms_course_survey/js/lms_course_survey.js"
+app_include_css = "/assets/lms_course_survey/css/course_satisfaction.css"
+app_include_js = [
+	"/assets/lms_course_survey/js/course_satisfaction.js",
+	"/assets/lms_course_survey/js/course_chapter_redirect.js",
+]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/lms_course_survey/css/lms_course_survey.css"
@@ -69,6 +78,11 @@ app_license = "mit"
 
 # automatically create page for each record of this doctype
 # website_generators = ["Web Page"]
+
+# Expor página de satisfação como web page
+website_route_rules = [
+	{"from_route": "/app/course-satisfaction-form", "to_route": "course_satisfaction_form"},
+]
 
 # automatically load and sync documents of this doctype from downstream apps
 # importable_doctypes = [doctype_1]
@@ -138,34 +152,24 @@ app_license = "mit"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	"Course Completion Certificate": {
+		"validate": "lms_course_survey.satisfacao.certificate_validation.validate_survey_before_certificate",
+	},
+	"Course Enrollment": {
+		"validate": "lms_course_survey.satisfacao.certificate_validation.block_course_completion_without_survey",
+	},
+}
 
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"lms_course_survey.tasks.all"
-# 	],
-# 	"daily": [
-# 		"lms_course_survey.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"lms_course_survey.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"lms_course_survey.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"lms_course_survey.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	"daily": [
+		"lms_course_survey.satisfacao.survey_reminders.send_survey_reminders",
+		"lms_course_survey.satisfacao.survey_reminders.create_pending_survey_tasks",
+	],
+}
 
 # Testing
 # -------
@@ -190,9 +194,9 @@ app_license = "mit"
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
-# override_doctype_dashboards = {
-# 	"Task": "lms_course_survey.task.get_dashboard_data"
-# }
+override_doctype_dashboards = {
+	"Course Satisfaction": "lms_course_survey.satisfacao.dashboard.get_dashboard_data"
+}
 
 # exempt linked doctypes from being automatically cancelled
 #
