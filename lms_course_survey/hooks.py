@@ -1,7 +1,7 @@
 app_name = "lms_course_survey"
-app_title = "Lms Course Survey"
+app_title = "LMS Course Feedback"
 app_publisher = "GL SOLTEC"
-app_description = "Esnquete Cursos"
+app_description = "Sistema de Feedback para Cursos LMS"
 app_email = "ti@glsoltec.com.br"
 app_license = "mit"
 
@@ -12,8 +12,7 @@ app_license = "mit"
 
 # Fixtures - Dados iniciais a serem sincronizados
 # fixtures = [
-#    "satisfacao/doctype/course_satisfaction/course_satisfaction.json",
-#    "satisfacao/doctype/satisfaction_item/satisfaction_item.json",
+#    "satisfacao/doctype/course_feedback/course_feedback.json",
 # ]
 
 # Each item in the list will be shown as an app in the apps page
@@ -21,8 +20,8 @@ add_to_apps_screen = [
 	{
 		"name": "lms_course_survey",
 		"logo": "/assets/lms_course_survey/logo.png",
-		"title": "Pesquisa de Satisfação",
-		"route": "/app/course-satisfaction",
+		"title": "Feedback de Cursos",
+		"route": "/app/course-feedback",
 		"has_permission": "lms_course_survey.api.permission.has_app_permission"
 	}
 ]
@@ -31,10 +30,8 @@ add_to_apps_screen = [
 # ------------------
 
 # include js, css files in header of desk.html
-app_include_css = "/assets/lms_course_survey/css/course_satisfaction.css"
 app_include_js = [
 	"/assets/lms_course_survey/js/course_satisfaction.js",
-	"/assets/lms_course_survey/js/course_chapter_redirect.js",
 ]
 
 # include js, css files in header of web template
@@ -78,11 +75,6 @@ app_include_js = [
 
 # automatically create page for each record of this doctype
 # website_generators = ["Web Page"]
-
-# Expor página de satisfação como web page
-website_route_rules = [
-	{"from_route": "/app/course-satisfaction-form", "to_route": "course_satisfaction_form"},
-]
 
 # automatically load and sync documents of this doctype from downstream apps
 # importable_doctypes = [doctype_1]
@@ -154,21 +146,8 @@ website_route_rules = [
 
 doc_events = {
 	"Course Completion Certificate": {
-		"validate": "lms_course_survey.satisfacao.certificate_validation.validate_survey_before_certificate",
+		"validate": "lms_course_survey.satisfacao.certificate_validation.validate_certificate_needs_feedback",
 	},
-	"Course Enrollment": {
-		"validate": "lms_course_survey.satisfacao.certificate_validation.block_course_completion_without_survey",
-	},
-}
-
-# Scheduled Tasks
-# ---------------
-
-scheduler_events = {
-	"daily": [
-		"lms_course_survey.satisfacao.survey_reminders.send_survey_reminders",
-		"lms_course_survey.satisfacao.survey_reminders.create_pending_survey_tasks",
-	],
 }
 
 # Testing
@@ -195,7 +174,7 @@ scheduler_events = {
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
 override_doctype_dashboards = {
-	"Course Satisfaction": "lms_course_survey.satisfacao.dashboard.get_dashboard_data"
+	"Course Feedback": "lms_course_survey.satisfacao.dashboard.get_dashboard_data"
 }
 
 # exempt linked doctypes from being automatically cancelled

@@ -4,13 +4,12 @@ from frappe import _
 
 def get_dashboard_data(data):
 	"""
-	Gera dashboard personalizado para Course Satisfaction DocType
-	Mostra gráficos de satisfação agregados
+	Dashboard personalizado para Course Feedback DocType
+	Mostra gráficos de feedback agregados
 	"""
-
 	return {
 		"heatmap": False,
-		"heatmap_message": _("Este é um resumo de satisfação dos cursos."),
+		"heatmap_message": _("Resumo de feedback dos cursos."),
 		"cards": get_cards(),
 		"chart_data": get_chart_data(),
 		"non_standard_fieldtypes": {},
@@ -19,117 +18,109 @@ def get_dashboard_data(data):
 
 def get_cards():
 	"""
-	Cards mostrando métricas principais
+	Cards com métricas principais de feedback
 	"""
 	from frappe.utils import getdate
-	from datetime import timedelta
+	from frappe.utils import add_days
 
 	# Últimas 30 dias
-	start_date = frappe.utils.add_days(getdate(), -30)
+	start_date = add_days(getdate(), -30)
 
-	total_surveys = frappe.db.count(
-		"Course Satisfaction",
+	total_feedbacks = frappe.db.count(
+		"Course Feedback",
 		filters={
 			"docstatus": 1,
-			"survey_date": [">", start_date],
+			"submitted_date": [">", start_date],
 		},
 	)
 
-	# Média geral dos últimos 30 dias
-	surveys = frappe.get_list(
-		"Course Satisfaction",
+	# Calcular notas médias
+	feedbacks = frappe.get_list(
+		"Course Feedback",
 		filters={
 			"docstatus": 1,
-			"survey_date": [">", start_date],
+			"submitted_date": [">", start_date],
 		},
-		fields=["name"],
+		fields=["instructor_rating", "content_rating", "course_rating", "overall_rating"],
 	)
 
-	all_ratings = []
-	for survey in surveys:
-		doc = frappe.get_doc("Course Satisfaction", survey["name"])
-		for item in doc.satisfaction_items:
-			rating = int(item.rating.split()[0])
-			all_ratings.append(rating)
+	ratings_map = {"Péssimo": 1, "Ruim": 2, "Regular": 3, "Bom": 4, "Ótimo": 5}
 
-	avg_rating = (
-		round(sum(all_ratings) / len(all_ratings), 2)
-		if all_ratings
-		else 0
-	)
+	if feedbacks:
+		overall_ratings = [ratings_map.get(f.get("overall_rating"), 0) for f in feedbacks]
+		avg_overall = round(sum(overall_ratings) / len(overall_ratings), 2)
+	else:
+		avg_overall = 0
 
 	return [
 		{
-			"label": _("Pesquisas (últimos 30 dias)"),
-			"stat": total_surveys,
-			"indicator": "green",
-			"doctype": "Course Satisfaction",
+			"label": _("Feedbacks (últimos 30 dias)"),
+			"stat": total_feedbacks,
+			"indicator": "blue",
+			"doctype": "Course Feedback",
 		},
 		{
-			"label": _("Nota Média Geral"),
-			"stat": f"{avg_rating}/5.0",
-			"indicator": get_indicator(avg_rating),
-			"doctype": "Course Satisfaction",
+			"label": _("Avaliação Geral Média"),
+			"stat": f"{avg_overall}/5.0",
+			"indicator": get_indicator(avg_overall),
+			"doctype": "Course Feedback",
 		},
 	]
 
 
 def get_chart_data():
 	"""
-	Gera dados para gráfico de satisfação por item
+	Gera dados para gráfico comparativo de feedback
 	"""
 	from frappe.utils import getdate
-	from datetime import timedelta
+	from frappe.utils import add_days
 
-	start_date = frappe.utils.add_days(getdate(), -30)
+	start_date = add_days(getdate(), -30)
 
-	surveys = frappe.get_list(
-		"Course Satisfaction",
+	feedbacks = frappe.get_list(
+		"Course Feedback",
 		filters={
 			"docstatus": 1,
-			"survey_date": [">", start_date],
+			"submitted_date": [">", start_date],
 		},
-		fields=["name"],
+		fields=["instructor_rating", "content_rating", "course_rating", "overall_rating"],
 	)
 
-	ratings_by_item = {
-		"Treinamento": [],
+	ratings_map = {"Péssimo": 1, "Ruim": 2, "Regular": 3, "Bom": 4, "Ótimo": 5}
+
+	# Agrupar ratings por categoria
+	ratings_by_category = {
 		"Instrutor": [],
 		"Conteúdo": [],
-		"Satisfação Geral": [],
+		"Curso": [],
+		"Geral": [],
 	}
 
-	for survey in surveys:
-		doc = frappe.get_doc("Course Satisfaction", survey["name"])
-		for item in doc.satisfaction_items:
-			rating = int(item.rating.split()[0])
-			if item.item_name in ratings_by_item:
-				ratings_by_item[item.item_name].append(rating)
+	for feedback in feedbacks:
+		ratings_by_category["Instrutor"].append(ratings_map.get(feedback.get("instructor_rating"), 0))
+		ratings_by_category["Conteúdo"].append(ratings_map.get(feedback.get("content_rating"), 0))
+		ratings_by_category["Curso"].append(ratings_map.get(feedback.get("course_rating"), 0))
+		ratings_by_category["Geral"].append(ratings_map.get(feedback.get("overall_rating"), 0))
 
 	# Calcular médias
 	averages = {}
-	for item, ratings in ratings_by_item.items():
+	for category, ratings in ratings_by_category.items():
 		if ratings:
-			averages[item] = round(sum(ratings) / len(ratings), 2)
+			averages[category] = round(sum(ratings) / len(ratings), 2)
 		else:
-			averages[item] = 0
+			averages[category] = 0
 
 	return {
 		"data": {
-			"labels": [
-				_("Treinamento"),
-				_("Instrutor"),
-				_("Conteúdo"),
-				_("Satisfação Geral"),
-			],
+			"labels": [_("Instrutor"), _("Conteúdo"), _("Curso"), _("Geral")],
 			"datasets": [
 				{
 					"name": _("Nota Média"),
 					"values": [
-						averages.get("Treinamento", 0),
 						averages.get("Instrutor", 0),
 						averages.get("Conteúdo", 0),
-						averages.get("Satisfação Geral", 0),
+						averages.get("Curso", 0),
+						averages.get("Geral", 0),
 					],
 				}
 			],
@@ -141,7 +132,7 @@ def get_chart_data():
 
 def get_indicator(rating):
 	"""
-	Define cor do indicador baseado na nota
+	Define cor do indicador (1-5)
 	"""
 	if rating >= 4:
 		return "green"

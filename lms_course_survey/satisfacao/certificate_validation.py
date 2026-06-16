@@ -1,15 +1,14 @@
 """
-Validação de Certificado - Requer pesquisa de satisfação
-Bloqueia emissão do certificado até pesquisa ser respondida
+Validação de Certificado - Requer feedback do aluno
+Bloqueia emissão do certificado até feedback ser respondido
 """
 
 import frappe
-from frappe import _
 
 
-def validate_survey_before_certificate(doc, method=None):
+def validate_certificate_needs_feedback(doc, method=None):
 	"""
-	Hook: Valida pesquisa antes de emitir certificado
+	Hook: Bloqueia certificado se aluno não respondeu feedback
 	Lançado quando usuário tenta gerar certificado
 	"""
 	if doc.doctype != "Course Completion Certificate":
@@ -18,9 +17,9 @@ def validate_survey_before_certificate(doc, method=None):
 	student = doc.student
 	course = doc.course
 
-	# Verificar se pesquisa foi respondida
-	survey_completed = frappe.db.exists(
-		"Course Satisfaction",
+	# Verificar se feedback foi respondido e submetido
+	feedback_completed = frappe.db.exists(
+		"Course Feedback",
 		{
 			"student": student,
 			"course": course,
@@ -28,83 +27,56 @@ def validate_survey_before_certificate(doc, method=None):
 		},
 	)
 
-	if not survey_completed:
+	if not feedback_completed:
 		frappe.throw(
-			_(
-				f"<h4>⚠️ Pesquisa de Satisfação Obrigatória</h4>"
-				f"<p>Você deve responder a pesquisa de satisfação antes de gerar o certificado.</p>"
-				f"<p><a href='/app/course-satisfaction-form?course={course}' target='_blank' class='btn btn-primary'>"
-				f"👉 Clique aqui para responder a pesquisa</a></p>"
-			)
+			f"""
+			<strong>📋 Feedback Obrigatório</strong><br><br>
+			Você deve responder o questionário de satisfação antes de gerar o certificado.<br><br>
+			<a href='/app/course-feedback?course={course}' class='btn btn-primary btn-sm'>
+			→ Responder Feedback Agora
+			</a>
+			""",
+			title="Feedback Pendente"
 		)
 
 
-def block_course_completion_without_survey(doc, method=None):
+def get_feedback_completion_status(course, student=None):
 	"""
-	Hook alternativo: Bloqueia marcação de curso como completo
-	"""
-	if doc.doctype != "Course Enrollment":
-		return
-
-	# Se tentando marcar como completo
-	if doc.progress == 100 and doc.docstatus == 0:
-		student = doc.student
-		course = doc.course
-
-		survey_completed = frappe.db.exists(
-			"Course Satisfaction",
-			{
-				"student": student,
-				"course": course,
-				"docstatus": 1,
-			},
-		)
-
-		if not survey_completed:
-			frappe.throw(
-				_(
-					"Complete a pesquisa de satisfação para finalizar o curso. "
-					f"<a href='/app/course-satisfaction-form?course={course}'>Responder agora</a>"
-				)
-			)
-
-
-def get_survey_completion_status(course, student=None):
-	"""
-	Retorna status de conclusão para um aluno/curso
+	Retorna status de conclusão do feedback para um aluno/curso
 	Útil para exibir no curso ou no certificado
 	"""
 	if not student:
 		student = frappe.session.user
 
-	survey = frappe.db.get_value(
-		"Course Satisfaction",
+	feedback = frappe.db.get_value(
+		"Course Feedback",
 		{
 			"student": student,
 			"course": course,
 			"docstatus": 1,
 		},
-		["name", "survey_date"],
+		["name", "submitted_date"],
 	)
 
-	if survey:
+	if feedback:
 		return {
 			"completed": True,
-			"survey_name": survey[0],
-			"survey_date": survey[1],
+			"feedback_name": feedback[0],
+			"feedback_date": feedback[1],
 		}
 	else:
 		return {
 			"completed": False,
-			"survey_name": None,
-			"survey_date": None,
+			"feedback_name": None,
+			"feedback_date": None,
 		}
 
 
 @frappe.whitelist()
-def get_pending_surveys():
+def get_pending_feedbacks():
 	"""
-	Retorna lista de pesquisas pendentes para o usuário logado
+	Retorna lista de cursos com feedback pendente para o usuário logado
+	Útil para dashboard pessoal
 	"""
 	student = frappe.session.user
 
@@ -122,9 +94,9 @@ def get_pending_surveys():
 	for enrollment in completed_courses:
 		course = enrollment["course"]
 
-		# Verificar se respondeu pesquisa
-		survey_exists = frappe.db.exists(
-			"Course Satisfaction",
+		# Verificar se respondeu feedback
+		feedback_exists = frappe.db.exists(
+			"Course Feedback",
 			{
 				"student": student,
 				"course": course,
@@ -132,12 +104,12 @@ def get_pending_surveys():
 			},
 		)
 
-		if not survey_exists:
+		if not feedback_exists:
 			course_doc = frappe.get_doc("Course", course)
 			pending.append({
 				"course": course,
 				"course_name": course_doc.course_name,
-				"survey_url": f"/app/course-satisfaction-form?course={course}",
+				"feedback_url": f"/app/course-feedback?course={course}",
 			})
 
 	return pending

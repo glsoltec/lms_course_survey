@@ -1,0 +1,144 @@
+{
+ "doctype": "DocType",
+ "name": "Course Feedback",
+ "module": "Satisfacao",
+ "docstatus_fieldname": "docstatus",
+ "naming_rule": "AUTOINCREMENT",
+ "is_submittable": 1,
+ "track_changes": 1,
+ "track_seen": 1,
+ "audit_log": 1,
+ "search_fields": "course,student,creation",
+ "fields": [
+  {
+   "fieldname": "student",
+   "label": "Aluno",
+   "fieldtype": "Link",
+   "options": "User",
+   "read_only": 1,
+   "mandatory": 1,
+   "description": "Preenchido automaticamente com usuário logado. Campo de auditoria."
+  },
+  {
+   "fieldname": "course",
+   "label": "Curso Avaliado",
+   "fieldtype": "Link",
+   "options": "LMS Course",
+   "mandatory": 1,
+   "reqd": 1,
+   "description": "Selecione o curso que deseja avaliar"
+  },
+  {
+   "fieldname": "section_instructor",
+   "label": "Instrutor",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "instructor_rating",
+   "label": "Como você avalia a clareza nas explicações e o domínio técnico do instrutor?",
+   "fieldtype": "Select",
+   "options": "Péssimo\nRuim\nRegular\nBom\nÓtimo",
+   "mandatory": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_content",
+   "label": "Conteúdo",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "content_rating",
+   "label": "Como você avalia a relevância e a utilidade prática do material e dos tópicos abordados?",
+   "fieldtype": "Select",
+   "options": "Péssimo\nRuim\nRegular\nBom\nÓtimo",
+   "mandatory": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_course",
+   "label": "Curso",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "course_rating",
+   "label": "Como você avalia a organização geral, a plataforma e a carga horária do treinamento?",
+   "fieldtype": "Select",
+   "options": "Péssimo\nRuim\nRegular\nBom\nÓtimo",
+   "mandatory": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_overall",
+   "label": "Avaliação Geral",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "overall_rating",
+   "label": "Qual é a sua avaliação geral sobre a experiência de aprendizado neste treinamento?",
+   "fieldtype": "Select",
+   "options": "Péssimo\nRuim\nRegular\nBom\nÓtimo",
+   "mandatory": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "feedback_comments",
+   "label": "Sugestões e Comentários",
+   "fieldtype": "Small Text",
+   "mandatory": 0,
+   "description": "Compartilhe suas sugestões, críticas ou comentários adicionais"
+  },
+  {
+   "fieldname": "section_audit",
+   "label": "Auditoria",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "submitted_date",
+   "label": "Data de Envio",
+   "fieldtype": "Datetime",
+   "read_only": 1
+  }
+ ],
+ "permissions": [
+  {
+   "role": "Guest",
+   "permlevel": 0,
+   "create": 0,
+   "read": 0,
+   "write": 0,
+   "submit": 0,
+   "cancel": 0,
+   "report": 0,
+   "export": 0
+  },
+  {
+   "role": "Student",
+   "permlevel": 0,
+   "create": 1,
+   "read": 1,
+   "write": 1,
+   "submit": 1,
+   "cancel": 0,
+   "report": 0,
+   "export": 0
+  },
+  {
+   "role": "System Manager",
+   "permlevel": 0,
+   "read": 1,
+   "write": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "amend": 0
+  },
+  {
+   "role": "Education Manager",
+   "permlevel": 0,
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  }
+ ]
+}
