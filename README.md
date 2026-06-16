@@ -1,6 +1,6 @@
-# 📊 Pesquisa de Satisfação para LMS - ERPNext v16
+# 📋 Course Feedback - ERPNext v16 LMS
 
-> Sistema completo de pesquisas de satisfação integrado ao LMS (Learning Management System) do ERPNext v16 com suporte a múltiplas fases, modal automático após conclusão de cursos e mecanismos de reforço para garantir adesão dos alunos.
+> Sistema de feedback para cursos LMS no ERPNext v16, com avaliação estruturada por opções textuais (Péssimo/Ruim/Regular/Bom/Ótimo), integração com certificados e dashboard de estatísticas.
 
 ---
 
@@ -8,38 +8,40 @@
 
 | Campo | Valor |
 |-------|-------|
-| **Nome** | LMS Course Survey |
-| **Título Português** | Pesquisa de Satisfação para Cursos |
+| **Nome** | LMS Course Feedback |
+| **Título Português** | Feedback de Cursos |
 | **Autor** | GL SOLTEC |
 | **Email** | ti@glsoltec.com.br |
 | **Licença** | MIT |
-| **Versão ERPNext** | 16 |
+| **Versão ERPNext** | 16.x |
 | **Status** | ✅ Pronto para Produção |
-| **Data de Lançamento** | 2026-06-15 |
+| **Data de Lançamento** | 2026-06-16 |
 
 ---
 
 ## ✨ Funcionalidades
 
-### 🎯 **Fase 1: Pesquisa Core**
-- ✅ 4 perguntas padrão (Treinamento, Instrutor, Conteúdo, Satisfação Geral)
-- ✅ Escala de avaliação 1-5
-- ✅ Feedback textual opcional
-- ✅ Autopreenchimento de data
-- ✅ Validação automática
+### 🎯 **Sistema de Feedback Estruturado**
+- ✅ 4 perguntas obrigatórias com opções textuais
+  - Como você avalia a clareza nas explicações e o domínio técnico do instrutor?
+  - Como você avalia a relevância e utilidade prática do material?
+  - Como você avalia a organização geral, plataforma e carga horária?
+  - Qual é sua avaliação geral sobre a experiência?
+- ✅ Opções: Péssimo, Ruim, Regular, Bom, Ótimo
+- ✅ Campo de sugestões e comentários (opcional)
+- ✅ Auto-registro do aluno logado (auditoria)
 
-### 📱 **Fase 2: Modal Automático**
-- ✅ Detecção automática do último capítulo do curso
-- ✅ Modal elegante ao final da última aula
-- ✅ Botões "Responder Agora" e "Responder Depois"
-- ✅ Redirecionamento automático para pesquisa
-- ✅ Design responsivo com animações
+### 📊 **Dashboard com Estatísticas**
+- ✅ Total de feedbacks nos últimos 30 dias
+- ✅ Avaliação geral média
+- ✅ Gráfico comparativo por categoria (Instrutor, Conteúdo, Curso, Geral)
+- ✅ Indicadores de desempenho com cores
 
-### 🛡️ **Fase 3: Mecanismos de Reforço**
-- ✅ **Bloqueio de Certificado**: Impede geração sem responder
-- ✅ **Lembretes Automáticos**: Emails diários para pendentes
-- ✅ **Widget Dashboard**: Visualiza pesquisas pendentes
-- ✅ **Relatórios**: Acompanhamento de compliance
+### 🔐 **Segurança e Compliance**
+- ✅ **Bloqueio de Certificado**: Impede geração sem feedback respondido
+- ✅ Auditoria automática (quem respondeu, quando)
+- ✅ Apenas usuários logados podem responder
+- ✅ Role-based permissions (Student, Manager, Admin)
 
 ---
 
@@ -55,14 +57,10 @@
 ### Permissões
 - Acesso a bench CLI
 - Permissões de administrador para instalar apps
-- Scheduler ativo para jobs automáticos
 
 ---
 
 ## 🚀 Instalação
-
-### Pré-requisitos
-Certifique-se de ter um ambiente Frappe/ERPNext v16 configurado com bench.
 
 ### Passo 1: Clone o Repositório
 
@@ -100,29 +98,33 @@ bench --site seu_site list-apps
 
 ## ⚙️ Configuração
 
-### 1. Ativar Scheduler (Necessário para Lembretes)
+### 1. Permissões de Função
 
-```bash
-# Verificar status
-bench scheduler-status
+As permissões são configuradas automaticamente:
 
-# Se parado, iniciar
-bench start-scheduler
+**Student (Aluno)**
+- ✅ Criar feedback
+- ✅ Responder (Submit)
+- ❌ Editar após envio
+- ❌ Visualizar relatórios
+
+**System Manager / Education Manager**
+- ✅ Visualizar todos os feedbacks
+- ✅ Gerar relatórios
+- ✅ Exportar dados
+
+### 2. Bloquear Certificado sem Feedback
+
+O bloqueio é automático. Quando aluno tenta gerar certificado:
+
 ```
-
-### 2. Configurar Email (Para Lembretes Automáticos)
-
-No ERPNext:
-1. Acesse **Setup → Email Account**
-2. Configure sua conta SMTP
-3. Teste a conexão
-
-### 3. Configuração de Permissões
-
-As permissões são gerenciadas automaticamente por:
-- **Estudantes**: Podem responder suas próprias pesquisas
-- **Instrutores**: Podem visualizar resultados dos seus cursos
-- **Administradores**: Acesso total
+Se feedback não respondido:
+  ❌ Gera erro: "Feedback Obrigatório"
+  → Exibe link para responder feedback
+  
+Se feedback respondido:
+  ✅ Permite gerar certificado normalmente
+```
 
 ---
 
@@ -130,33 +132,36 @@ As permissões são gerenciadas automaticamente por:
 
 ### Para Alunos
 
-#### Respondendo a Pesquisa
+#### Respondendo ao Feedback
 
-1. **Após finalizar o último capítulo** → Modal automático aparece
-2. **Clique em "Responder Agora"** → Abrir formulário
-3. **Preencha as 4 questões** → Escala 1-5
-4. **Adicione feedback (opcional)** → Campo de texto
-5. **Clique em "Submeter"** → Pesquisa salva
+1. Acesse: **Menu → Feedback de Cursos → Novo**
+2. Ou acesse via link direto: `/app/course-feedback?course=seu_curso`
+3. **Preencha os campos:**
+   - Curso Avaliado (obrigatório)
+   - 4 perguntas com opções Péssimo/Ruim/Regular/Bom/Ótimo
+   - Comentários (opcional)
+4. **Clique em "Submeter"**
+5. Feedback salvo com auditoria (aluno, data, hora)
 
-#### Visualizar Pesquisas Pendentes
+#### Ao Tentar Gerar Certificado
 
-1. Acesse **Dashboard pessoal**
-2. Veja widget **"Pesquisas Pendentes"**
-3. Clique em curso para responder
+1. Se feedback **pendente** → Erro com link para responder
+2. Se feedback **respondido** → Certificado gerado normalmente
 
-### Para Gestores/Instrutores
+### Para Gestores
 
 #### Acessar Resultados
 
-1. Vá para **Pesquisa de Satisfação**
-2. Filtre por Curso ou Período
-3. Visualize relatórios e estatísticas
+1. Vá para **Feedback de Cursos**
+2. Visualize dashboard com estatísticas
+3. Filtre por curso, data, aluno
+4. Exporte dados para análise
 
-#### Monitorar Compliance
+#### Ver Estatísticas
 
-1. Acesse **Relatório de Pesquisas Pendentes**
-2. Veja alunos que ainda não responderam
-3. Envie lembretes manualmente se necessário
+- Dashboard mostra gráfico comparativo
+- Médias por categoria (Instrutor, Conteúdo, etc)
+- Total de feedbacks nos últimos 30 dias
 
 ---
 
@@ -166,132 +171,115 @@ As permissões são gerenciadas automaticamente por:
 lms_course_survey/
 ├── lms_course_survey/
 │   ├── __init__.py
-│   ├── hooks.py                              # Configurações e hooks
-│   ├── modules.txt                           # Definição de módulos
-│   ├── templates/
-│   │   └── pages/
-│   │       └── course_satisfaction_form.html # Formulário web
+│   ├── hooks.py                           # Configurações principais
+│   ├── modules.txt                        # Definição de módulos
 │   └── public/
-│       ├── js/
-│       │   ├── course_satisfaction.js        # Lógica form desk
-│       │   └── course_chapter_redirect.js    # Modal automático
-│       └── css/
-│           └── course_satisfaction.css       # Estilos
+│       └── js/
+│           └── course_satisfaction.js     # Scripts da form
 │
-├── satisfacao/                                # Módulo principal
+├── satisfacao/                             # Módulo principal
 │   ├── __init__.py
-│   ├── api.py                                # APIs REST
-│   ├── dashboard.py                          # Dashboard data
-│   ├── certificate_validation.py             # Bloqueio certificado
-│   ├── survey_reminders.py                   # Lembretes automáticos
-│   ├── pending_surveys_widget.py             # Widget dashboard
-│   ├── course_chapter_integration.py         # Integração capítulos
+│   ├── api.py                             # APIs REST (se necessário)
+│   ├── dashboard.py                       # Dashboard statistics
+│   ├── certificate_validation.py          # Bloqueio de certificado
+│   ├── api/
+│   │   └── permission.py                  # Controle de permissões
 │   ├── doctype/
-│   │   ├── course_satisfaction/              # DocType principal
-│   │   │   ├── course_satisfaction.json
-│   │   │   └── course_satisfaction.py
-│   │   └── satisfaction_item/                # Child table
-│   │       ├── satisfaction_item.json
-│   │       └── satisfaction_item.py
-│   ├── report/
-│   │   └── satisfaction_dashboard/
-│   │       └── satisfaction_dashboard.py     # Query Report
+│   │   └── course_feedback/
+│   │       ├── __init__.py
+│   │       ├── course_feedback.json       # Definição do DocType
+│   │       ├── course_feedback.py         # Lógica Python
+│   │       └── course_feedback.js         # Scripts da form
 │   └── tests/
-│       └── test_course_satisfaction.py       # Testes unitários
+│       └── test_course_feedback.py        # Testes unitários
 │
-├── docs/                                      # Documentação
-│   ├── INSTALL.md                            # Guia de instalação
-│   ├── NON_COMPLIANCE_SOLUTIONS.md            # Mecanismos de reforço
-│   ├── COURSE_CHAPTER_INTEGRATION.md         # Integração capítulos
-│   └── DEPLOYMENT_CHECKLIST.md               # Checklist deploy
-│
-├── README.md                                  # Este arquivo
-├── LICENSE                                    # MIT License
+├── README.md                              # Este arquivo
+├── LICENSE                                 # MIT License
 └── .gitignore
 ```
 
 ---
 
-## 🔗 Documentação Completa
+## 🔗 Estrutura de Dados
 
-| Documento | Descrição |
-|-----------|-----------|
-| **[INSTALL.md](docs/INSTALL.md)** | Guia detalhado de instalação e troubleshooting |
-| **[NON_COMPLIANCE_SOLUTIONS.md](docs/NON_COMPLIANCE_SOLUTIONS.md)** | 3 soluções para garantir respostas (bloqueio, lembretes, dashboard) |
-| **[COURSE_CHAPTER_INTEGRATION.md](docs/COURSE_CHAPTER_INTEGRATION.md)** | Como a modal automática funciona e APIs |
-| **[DEPLOYMENT_CHECKLIST.md](docs/DEPLOYMENT_CHECKLIST.md)** | Checklist antes de ir para produção |
-| **[SATISFACAO.md](docs/SATISFACAO.md)** | Documentação técnica dos DocTypes |
+### DocType: Course Feedback
+
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-----------|-----------|
+| `student` | Link (User) | Sim | Preenchido automaticamente |
+| `course` | Link (LMS Course) | Sim | Curso avaliado |
+| `instructor_rating` | Select | Sim | Instrutor: Péssimo/Ruim/Regular/Bom/Ótimo |
+| `content_rating` | Select | Sim | Conteúdo: Péssimo/Ruim/Regular/Bom/Ótimo |
+| `course_rating` | Select | Sim | Curso: Péssimo/Ruim/Regular/Bom/Ótimo |
+| `overall_rating` | Select | Sim | Geral: Péssimo/Ruim/Regular/Bom/Ótimo |
+| `feedback_comments` | Small Text | Não | Sugestões e comentários |
+| `submitted_date` | Datetime | Sim | Data/hora de envio (auto) |
 
 ---
 
 ## 🧪 Testando a Aplicação
 
-### Teste Manual da Pesquisa
+### Teste Manual
 
 ```bash
 # 1. Acesse o desk do ERPNext
-# 2. Vá para: Pesquisa de Satisfação → Novo
+# 2. Vá para: Feedback de Cursos → Novo
 # 3. Preencha:
-#    - Aluno: escolha um usuário
 #    - Curso: escolha um curso LMS
-#    - Itens: 4 perguntas padrão (auto-preenchidas)
+#    - Ratings: selecione opções para cada pergunta
+#    - Comentários: opcional
 # 4. Clique Submeter
 ```
 
-### Teste do Modal Automático
+### Teste de Bloqueio de Certificado
 
 ```bash
-# 1. Crie um curso com múltiplos capítulos
-# 2. Aluno acessa último capítulo
-# 3. Modal deve aparecer automaticamente
-# 4. Botões "Responder Agora" e "Depois" funcionam
+# 1. Tente gerar certificado para aluno que NÃO respondeu feedback
+# 2. Deve exibir erro: "Feedback Obrigatório"
+# 3. Responda o feedback
+# 4. Tente novamente → deve funcionar
 ```
 
-### Teste de Lembretes
+### Teste de Dashboard
 
 ```bash
-# Via console Frappe:
-from lms_course_survey.satisfacao.survey_reminders import send_survey_reminders
-send_survey_reminders()
-
-# Verificar logs:
-tail -f /home/frappe/frappe-bench/logs/schedule.log
+# 1. Acesse Feedback de Cursos
+# 2. Dashboard deve mostrar:
+#    - Cards com total e média
+#    - Gráfico com comparativo
+# 3. Dados devem estar corretos
 ```
 
 ---
 
 ## 🐛 Troubleshooting
 
-### Erro: "No module named 'lms_course_survey.satisfação'"
-
-**Solução**: O arquivo `modules.txt` contém caracteres especiais. Corrija para `Satisfacao` sem til.
-
-```bash
-# Em modules.txt linha 2:
-# Altere: Satisfação
-# Para: Satisfacao
-```
-
-### Modal não aparece após último capítulo
+### Erro: "No module named 'lms_course_survey.satisfacao'"
 
 **Verificar**:
-1. JavaScript `course_chapter_redirect.js` está carregado no console
-2. `app_include_js` em `hooks.py` contém `course_chapter_redirect.js`
-3. Cache limpo: `bench clear-cache`
+- `modules.txt` contém `Satisfacao` (sem til)
+- Não use caracteres especiais em nomes de módulos Python
 
-### Emails de lembrete não são enviados
+### DocType não aparece
 
 **Verificar**:
-1. Scheduler está rodando: `bench scheduler-status`
-2. Email account está configurado em Setup → Email Account
-3. Logs: `tail -f logs/schedule.log`
+1. Migração executada: `bench migrate`
+2. Cache limpo: `bench clear-cache`
+3. Permissions configuradas: Role Permissions Manager
 
 ### Bloqueio de certificado não funciona
 
 **Verificar**:
-1. `doc_events` em `hooks.py` contém hook para `Course Completion Certificate`
-2. `certificate_validation.py` está no caminho correto
-3. Migrate foi executado: `bench migrate`
+1. Hook configurado em `hooks.py` → `doc_events`
+2. Caminho correto: `certificate_validation.validate_certificate_needs_feedback`
+3. Migrate foi executado
+
+### Dados não aparecem no dashboard
+
+**Verificar**:
+1. Feedbacks foram submetidos (docstatus = 1)
+2. Data está dentro dos últimos 30 dias
+3. Cache limpo: `bench clear-cache`
 
 ---
 
@@ -299,41 +287,63 @@ tail -f /home/frappe/frappe-bench/logs/schedule.log
 
 ### Boas Práticas Implementadas
 
-✅ **Validação de Dados**: Todos os campos validados server-side  
-✅ **Permissões**: Whitelisted methods, sem acesso anônimo  
-✅ **CSRF Protection**: Frappe padrão habilitado  
-✅ **SQL Injection Prevention**: ORM Frappe previne injeções  
-✅ **XSS Prevention**: Sanitização automática de HTML  
+✅ **Validação de Dados**: Server-side validation  
+✅ **Permissões**: Role-based, whitelist de métodos  
+✅ **Auditoria**: Track changes habilitado  
+✅ **Imutabilidade**: Submittable (não pode editar após envio)  
+✅ **Usuário**: Auto-registrado via `frappe.session.user`
 
 ### Recomendações para Produção
 
 1. **Backup regular** do banco de dados
-2. **Monitorar logs** para atividades suspeitas
+2. **Monitorar logs** para atividades anormais
 3. **Atualizar** regularmente Frappe/ERPNext
 4. **SSL/TLS** em produção (obrigatório)
-5. **GDPR Compliance**: Pesquisas contêm dados pessoais
 
 ---
 
-## 📊 Estatísticas & Métricas
-
-### Endpoints Disponíveis
+## 📊 APIs REST Disponíveis
 
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
-| GET | `/api/method/lms_course_survey.api.get_satisfaction_stats` | Stats gerais |
-| GET | `/api/method/lms_course_survey.api.get_course_satisfaction_summary` | Resumo curso |
-| GET | `/api/method/lms_course_survey.satisfacao.pending_surveys_widget.get_pending_surveys_data` | Pesquisas pendentes |
-| POST | `/api/method/lms_course_survey.api.create_default_satisfaction_items` | Criar itens padrão |
+| GET | `/api/method/lms_course_survey.satisfacao.certificate_validation.get_feedback_completion_status` | Status do feedback |
+| GET | `/api/method/lms_course_survey.satisfacao.certificate_validation.get_pending_feedbacks` | Feedbacks pendentes |
+
+---
+
+## 📊 Relatórios e Exportação
+
+### Via Desk
+
+1. Vá para **Feedback de Cursos**
+2. Clique em **Menu** → **Report Builder**
+3. Filtre por período, curso, aluno
+4. Exporte para CSV/Excel
+
+### Via API
+
+```python
+# Python/console Frappe
+from lms_course_survey.satisfacao.doctype.course_feedback.course_feedback import CourseFeedback
+
+stats = CourseFeedback.get_feedback_stats(course="seu_curso")
+print(stats)
+# Retorna: {
+#   "total_feedbacks": 10,
+#   "instructor_avg": 4.2,
+#   "content_avg": 3.8,
+#   "course_avg": 4.0,
+#   "overall_avg": 4.0
+# }
+```
 
 ---
 
 ## 📝 Licença
 
-MIT License - Veja arquivo [LICENSE](LICENSE) para detalhes completos.
+MIT License - Veja arquivo [LICENSE](LICENSE) para detalhes.
 
-Basicamente: use livremente, modificar, distribuir, inclusive comercialmente. 
-Apenas mencione a autoria original (GL SOLTEC).
+Resumidamente: use livremente, modifique, distribua. Mencione a autoria original (GL SOLTEC).
 
 ---
 
@@ -343,24 +353,17 @@ Apenas mencione a autoria original (GL SOLTEC).
 
 1. Abra uma [Issue no GitHub](https://github.com/glsoltec/lms_course_survey/issues)
 2. Descreva o problema com detalhes
-3. Inclua logs e screenshots se possível
+3. Inclua logs se possível
 
 ### Contribuir
 
 ```bash
 # 1. Fork o repositório
-# 2. Crie sua branch: git checkout -b feature/nova-funcionalidade
-# 3. Commit mudanças: git commit -am 'Add feature'
-# 4. Push: git push origin feature/nova-funcionalidade
+# 2. Crie sua branch: git checkout -b feature/sua-feature
+# 3. Commit: git commit -am 'Add feature'
+# 4. Push: git push origin feature/sua-feature
 # 5. Abra Pull Request
 ```
-
-### Requisitos para Contribuição
-
-- Python 3.10+
-- Frappe/ERPNext v16
-- Pre-commit hooks instalados
-- Código seguindo PEP 8
 
 ---
 
@@ -377,7 +380,8 @@ Apenas mencione a autoria original (GL SOLTEC).
 
 | Versão | Data | Notas |
 |--------|------|-------|
-| 1.0 | 2026-06-15 | 🎉 Release inicial com todas as 3 fases |
+| 2.0 | 2026-06-16 | Refactoring: Course Feedback com opções textuais |
+| 1.0 | 2026-06-15 | Release inicial com Course Satisfaction (descontinuado) |
 
 ---
 
@@ -385,18 +389,10 @@ Apenas mencione a autoria original (GL SOLTEC).
 
 - [ERPNext Documentation](https://docs.erpnext.com)
 - [Frappe Framework](https://frappe.io)
-- [Bench Documentation](https://frappeframework.com/docs/user/en/guides/deployment)
-- [LMS Module](https://docs.erpnext.com/docs/user/manual/en/modules/learning)
+- [DocType Documentation](https://docs.erpnext.com/docs/user/manual/en/customize-erpnext/custom-field)
 
 ---
 
-## ⚖️ Aviso Legal
-
-Este software é fornecido "como está", sem garantias de nenhum tipo. 
-Para informações detalhadas, consulte a licença MIT incluída no repositório.
-
----
-
-**Versão do README**: 1.0  
-**Última atualização**: 2026-06-15  
+**Versão do README**: 2.0  
+**Última atualização**: 2026-06-16  
 **Status**: ✅ Pronto para Produção
