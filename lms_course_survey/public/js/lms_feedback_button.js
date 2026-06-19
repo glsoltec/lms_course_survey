@@ -21,11 +21,12 @@
 		const course_name = pathParts[courseIndex + 1];
 
 		// Chamar backend para obter dados do botão
+		const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 		fetch('/api/method/lms_course_survey.satisfacao.course_integration.get_course_feedback_button_data', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
-				'X-Frappe-CSRF-Token': frappe.csrf_token
+				'X-Frappe-CSRF-Token': csrfToken
 			},
 			body: JSON.stringify({ course: course_name })
 		})
@@ -260,4 +261,8 @@
 		childList: true,
 		subtree: true
 	});
+
+	// Log para debug
+	console.log('LMS Feedback Button script carregado');
+});
 })();
