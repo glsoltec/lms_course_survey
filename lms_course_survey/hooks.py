@@ -32,6 +32,7 @@ add_to_apps_screen = [
 # include js, css files in header of desk.html
 app_include_js = [
 	"/assets/lms_course_survey/js/course_satisfaction.js",
+	"/assets/lms_course_survey/js/course_feedback_button.js",
 ]
 
 # include js, css files in header of web template
