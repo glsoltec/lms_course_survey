@@ -4,126 +4,9 @@
  */
 
 (function() {
-	// Detectar quando está na página de curso frontend
-	const detectCoursePageAndInjectButton = function() {
-		// Verificar se está em página de curso (/lms/courses/...)
-		if (!window.location.pathname.includes('/lms/courses/')) {
-			return;
-		}
+	let hasBeenInjected = false;
+	let currentCourse = null;
 
-		// Extrair nome do curso da URL
-		const pathParts = window.location.pathname.split('/');
-		const courseIndex = pathParts.indexOf('courses');
-		if (courseIndex === -1 || !pathParts[courseIndex + 1]) {
-			return;
-		}
-
-		const course_name = pathParts[courseIndex + 1];
-
-		// Chamar backend para obter dados do botão
-		const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-		fetch('/api/method/lms_course_survey.satisfacao.course_integration.get_course_feedback_button_data', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-Frappe-CSRF-Token': csrfToken
-			},
-			body: JSON.stringify({ course: course_name })
-		})
-		.then(response => {
-			console.log('LMS Feedback Button: Resposta da API -', response.status);
-			return response.json();
-		})
-		.then(data => {
-			console.log('LMS Feedback Button: Dados recebidos -', data);
-			if (data.message) {
-				injectFeedbackButton(course_name, data.message);
-			}
-		})
-		.catch(error => {
-			console.error('LMS Feedback Button: Erro ao buscar dados -', error);
-		});
-	};
-
-	function injectFeedbackButton(course_name, button_data) {
-		// Procurar por elemento container onde injetar
-		// Tenta diferentes seletores comuns
-		let container = document.querySelector('.course-hero') ||
-						document.querySelector('.course-header') ||
-						document.querySelector('[data-course-name]') ||
-						document.querySelector('.page-content') ||
-						document.querySelector('main') ||
-						document.body;
-
-		if (!container) return;
-
-		// Criar card de feedback
-		const card = createFeedbackCard(button_data);
-
-		// Injetar no topo do container
-		if (container.firstChild) {
-			container.insertBefore(card, container.firstChild);
-		} else {
-			container.appendChild(card);
-		}
-	}
-
-	function createFeedbackCard(button_data) {
-		const card = document.createElement('div');
-		card.className = 'lms-feedback-card';
-
-		// Classes baseadas no status
-		const statusClass = button_data.status === 'completed' ? 'completed' :
-							button_data.show_button ? 'pending' : 'disabled';
-		card.classList.add('status-' + statusClass);
-
-		// HTML do card
-		if (!button_data.show_button && button_data.reason === 'not_completed') {
-			// Mostrar progresso
-			card.innerHTML = `
-				<div class="feedback-card-content">
-					<div class="feedback-icon">⏰</div>
-					<div class="feedback-text">
-						<h4>Complete o curso para responder feedback</h4>
-						<p>${button_data.message}</p>
-					</div>
-				</div>
-			`;
-		} else if (button_data.show_button) {
-			// Mostrar botão
-			const btnClass = button_data.status === 'completed' ? 'btn-success' : 'btn-primary';
-			const icon = button_data.status === 'completed' ? '✓' : '📋';
-
-			card.innerHTML = `
-				<div class="feedback-card-content">
-					<div class="feedback-icon">${icon}</div>
-					<div class="feedback-text">
-						<h4>${button_data.message}</h4>
-					</div>
-					<div class="feedback-action">
-						<button class="feedback-button ${btnClass}" onclick="window.open('${button_data.feedback_url}', '_blank')">
-							${button_data.button_text} →
-						</button>
-					</div>
-				</div>
-			`;
-		} else {
-			// Não logado ou não inscrito
-			card.innerHTML = `
-				<div class="feedback-card-content">
-					<div class="feedback-icon">🔒</div>
-					<div class="feedback-text">
-						<h4>Feedback não disponível</h4>
-						<p>${button_data.message}</p>
-					</div>
-				</div>
-			`;
-		}
-
-		return card;
-	}
-
-	// Injetar estilos CSS
 	function injectStyles() {
 		if (document.getElementById('lms-feedback-styles')) return;
 
@@ -245,30 +128,175 @@
 		document.head.appendChild(style);
 	}
 
+	function createFeedbackCard(button_data) {
+		const card = document.createElement('div');
+		card.className = 'lms-feedback-card';
+		card.id = 'lms-feedback-card'; // ID único para evitar duplicatas
+
+		const statusClass = button_data.status === 'completed' ? 'completed' :
+							button_data.show_button ? 'pending' : 'disabled';
+		card.classList.add('status-' + statusClass);
+
+		if (!button_data.show_button && button_data.reason === 'not_completed') {
+			card.innerHTML = `
+				<div class="feedback-card-content">
+					<div class="feedback-icon">⏰</div>
+					<div class="feedback-text">
+						<h4>Complete o curso para responder feedback</h4>
+						<p>${button_data.message}</p>
+					</div>
+				</div>
+			`;
+		} else if (button_data.show_button) {
+			const btnClass = button_data.status === 'completed' ? 'btn-success' : 'btn-primary';
+			const icon = button_data.status === 'completed' ? '✓' : '📋';
+
+			card.innerHTML = `
+				<div class="feedback-card-content">
+					<div class="feedback-icon">${icon}</div>
+					<div class="feedback-text">
+						<h4>${button_data.message}</h4>
+					</div>
+					<div class="feedback-action">
+						<button class="feedback-button ${btnClass}" onclick="window.open('${button_data.feedback_url}', '_blank')">
+							${button_data.button_text} →
+						</button>
+					</div>
+				</div>
+			`;
+		} else {
+			card.innerHTML = `
+				<div class="feedback-card-content">
+					<div class="feedback-icon">🔒</div>
+					<div class="feedback-text">
+						<h4>Feedback não disponível</h4>
+						<p>${button_data.message}</p>
+					</div>
+				</div>
+			`;
+		}
+
+		return card;
+	}
+
+	function injectFeedbackButton(course_name, button_data) {
+		// Evitar injetar múltiplas vezes
+		if (document.getElementById('lms-feedback-card')) {
+			document.getElementById('lms-feedback-card').remove();
+		}
+
+		const container = document.querySelector('.course-hero') ||
+						  document.querySelector('.course-header') ||
+						  document.querySelector('[data-course-name]') ||
+						  document.querySelector('.page-content') ||
+						  document.querySelector('main') ||
+						  document.querySelector('article') ||
+						  document.querySelector('[role="main"]');
+
+		if (!container) {
+			console.warn('LMS Feedback Button: Container não encontrado');
+			return;
+		}
+
+		const card = createFeedbackCard(button_data);
+		if (container.firstChild) {
+			container.insertBefore(card, container.firstChild);
+		} else {
+			container.appendChild(card);
+		}
+	}
+
+	function fetchAndInjectButton() {
+		// Verificar se está em página de curso (/lms/courses/...)
+		if (!window.location.pathname.includes('/lms/courses/')) {
+			console.log('LMS Feedback Button: Não está em página de curso');
+			return;
+		}
+
+		// Extrair nome do curso da URL
+		const pathParts = window.location.pathname.split('/');
+		const courseIndex = pathParts.indexOf('courses');
+		if (courseIndex === -1 || !pathParts[courseIndex + 1]) {
+			console.log('LMS Feedback Button: Não conseguiu extrair curso da URL');
+			return;
+		}
+
+		const course_name = pathParts[courseIndex + 1];
+
+		// Se já foi injetado para este curso, não fazer novamente
+		if (hasBeenInjected && currentCourse === course_name) {
+			return;
+		}
+
+		console.log('LMS Feedback Button: Buscando dados para curso:', course_name);
+
+		// Chamar backend para obter dados do botão
+		const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+		fetch('/api/method/lms_course_survey.satisfacao.course_integration.get_course_feedback_button_data', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-Frappe-CSRF-Token': csrfToken
+			},
+			body: JSON.stringify({ course: course_name })
+		})
+		.then(response => {
+			console.log('LMS Feedback Button: Resposta da API -', response.status);
+			return response.json();
+		})
+		.then(data => {
+			console.log('LMS Feedback Button: Dados recebidos -', data);
+			if (data.message) {
+				injectFeedbackButton(course_name, data.message);
+				hasBeenInjected = true;
+				currentCourse = course_name;
+			}
+		})
+		.catch(error => {
+			console.error('LMS Feedback Button: Erro ao buscar dados -', error);
+		});
+	}
+
+	// Injetar estilos
+	injectStyles();
+
 	// Executar quando DOM está pronto
 	if (document.readyState === 'loading') {
 		document.addEventListener('DOMContentLoaded', function() {
-			injectStyles();
-			detectCoursePageAndInjectButton();
+			fetchAndInjectButton();
 		});
 	} else {
-		injectStyles();
-		detectCoursePageAndInjectButton();
+		fetchAndInjectButton();
 	}
 
-	// Re-verificar se página mudar (SPA)
-	const observer = new MutationObserver(function() {
-		if (window.location.pathname.includes('/lms/courses/')) {
-			detectCoursePageAndInjectButton();
+	// Detectar mudanças de página (para SPA) - com debounce para evitar chamadas múltiplas
+	let lastPathname = window.location.pathname;
+	let debounceTimer = null;
+
+	const checkPageChange = function() {
+		if (window.location.pathname !== lastPathname) {
+			lastPathname = window.location.pathname;
+			hasBeenInjected = false; // Reset para nova página
+			currentCourse = null;
+
+			// Debounce para evitar múltiplas chamadas rápidas
+			clearTimeout(debounceTimer);
+			debounceTimer = setTimeout(() => {
+				fetchAndInjectButton();
+			}, 500);
 		}
-	});
+	};
 
-	observer.observe(document.body, {
-		childList: true,
-		subtree: true
-	});
+	// Usar popstate para detectar mudanças de URL (mais eficiente que MutationObserver)
+	window.addEventListener('popstate', checkPageChange);
+	window.addEventListener('hashchange', checkPageChange);
 
-	// Log para debug
-	console.log('LMS Feedback Button script carregado');
-});
+	// Listener de pushState (para frameworks SPA)
+	const originalPushState = window.history.pushState;
+	window.history.pushState = function() {
+		originalPushState.apply(this, arguments);
+		checkPageChange();
+	};
+
+	console.log('LMS Feedback Button: Script carregado e pronto');
 })();
