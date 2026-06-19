@@ -30,13 +30,19 @@
 			},
 			body: JSON.stringify({ course: course_name })
 		})
-		.then(response => response.json())
+		.then(response => {
+			console.log('LMS Feedback Button: Resposta da API -', response.status);
+			return response.json();
+		})
 		.then(data => {
+			console.log('LMS Feedback Button: Dados recebidos -', data);
 			if (data.message) {
 				injectFeedbackButton(course_name, data.message);
 			}
 		})
-		.catch(error => console.log('LMS Feedback Button: Erro ao buscar dados', error));
+		.catch(error => {
+			console.error('LMS Feedback Button: Erro ao buscar dados -', error);
+		});
 	};
 
 	function injectFeedbackButton(course_name, button_data) {
