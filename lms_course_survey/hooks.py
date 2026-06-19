@@ -11,9 +11,9 @@ app_license = "mit"
 # required_apps = []
 
 # Fixtures - Dados iniciais a serem sincronizados
-# fixtures = [
-#    "satisfacao/doctype/course_feedback/course_feedback.json",
-# ]
+fixtures = [
+	"satisfacao/doctype/course_feedback/course_feedback.json",
+]
 
 # Each item in the list will be shown as an app in the apps page
 add_to_apps_screen = [
@@ -91,8 +91,8 @@ app_include_js = [
 # Installation
 # ------------
 
-# before_install = "lms_course_survey.install.before_install"
-# after_install = "lms_course_survey.install.after_install"
+before_install = "lms_course_survey.install.before_install"
+after_install = "lms_course_survey.install.after_install"
 
 # Uninstallation
 # ------------
